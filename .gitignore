@@ -1,0 +1,21 @@
+# Build output — includes generated Visual Studio project files and the
+# JUCE source FetchContent clones into build/_deps at configure time.
+build/
+
+# CMake, in case anything ever gets configured in-source by mistake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
+# Visual Studio
+.vs/
+*.vcxproj.user
+
+# Editors
+.vscode/
+.idea/
+
+# OS junk
+Thumbs.db
+desktop.ini
+.DS_Store
