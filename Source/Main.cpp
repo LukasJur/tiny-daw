@@ -1,7 +1,5 @@
-#define _USE_MATH_DEFINES
-
 #include <juce_audio_utils/juce_audio_utils.h>
-#include <cmath>
+#include "SynthAudioSource.h"
 
 //==============================================================================
 // MainComponent is where the audio callback lives. AudioAppComponent gives us
@@ -16,12 +14,11 @@ class MainComponent : public juce::AudioAppComponent
 {
 public:
     MainComponent()
+        : synthAudioSource (keyboardState),
+          keyboardComponent (keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
     {
+        addAndMakeVisible (keyboardComponent);
         setSize (600, 400);
-
-        // Ask for 0 input channels, 2 output channels (stereo).
-        // This also triggers an OS microphone-permission prompt on some
-        // platforms if input channels are requested, which we don't need yet.
         setAudioChannels (0, 2);
     }
 
@@ -35,27 +32,17 @@ public:
 
     void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override
     {
-        phaseIncrement = (juce::MathConstants<double>::twoPi * frequencyInHz / sampleRate);
+        synthAudioSource.prepareToPlay (samplesPerBlockExpected, sampleRate);
     }
 
     void getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill) override
     {
-       for (int sampleIndex = bufferToFill.startSample; sampleIndex < bufferToFill.startSample + bufferToFill.numSamples; sampleIndex++) {
-        float sample = sin(currentPhase) * amplitudeCoefficient;
-        
-        for (int channelIndex = 0; channelIndex < bufferToFill.buffer->getNumChannels(); channelIndex++) {
-            bufferToFill.buffer->setSample(channelIndex, sampleIndex, sample);
-        } 
-        
-        currentPhase += phaseIncrement;
-        if (currentPhase > juce::MathConstants<double>::twoPi) {
-            currentPhase -= (juce::MathConstants<double>::twoPi);
-        }
-       } 
+        synthAudioSource.getNextAudioBlock (bufferToFill);
     }
 
     void releaseResources() override
     {
+        synthAudioSource.releaseResources();
     }
 
     void paint (juce::Graphics& g) override
@@ -65,12 +52,15 @@ public:
 
     void resized() override
     {
+        keyboardComponent.setBounds (getLocalBounds().removeFromBottom (120));
     }
+
 private:
-    const float frequencyInHz = 440.0; 
-    const float amplitudeCoefficient = 0.2;
-    float phaseIncrement = 0.0;
-    float currentPhase = 0.0;  
+    // Declaration order matters: members initialize top to bottom, and both
+    // of the following hold a reference to keyboardState.
+    juce::MidiKeyboardState keyboardState;
+    SynthAudioSource synthAudioSource;
+    juce::MidiKeyboardComponent keyboardComponent;
 };
 
 //==============================================================================
