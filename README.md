@@ -13,8 +13,10 @@ Target feature set:
 Roughly in build order — each one is meant to be small enough to fully understand before moving to the next.
 
 1. **Skeleton app** — a JUCE `AudioAppComponent` + `JUCEApplication`/`DocumentWindow` that opens a window and outputs silence. ✅ done
-2. **One oscillator, one hardcoded note** — a sine wave at a fixed pitch, written directly in `getNextAudioBlock`, to learn the audio callback and a phase-accumulator oscillator. 🚧 in progress
-3. **Polyphonic synth** — JUCE's `Synthesiser` / `SynthesiserVoice` / `SynthesiserSound`, driven by real MIDI input.
+2. **One oscillator, one hardcoded note** — a sine wave at a fixed pitch, written directly in `getNextAudioBlock`, to learn the audio callback and a phase-accumulator oscillator. ✅ done
+3. **Polyphonic synth** — JUCE's `Synthesiser` / `SynthesiserVoice` / `SynthesiserSound`, driven by an on-screen `MidiKeyboardComponent` (real MIDI hardware input later). 🚧 core done; adding an ADSR envelope to remove the note-off click
+
+See [`docs/milestone.md`](docs/milestone.md) for the detailed, up-to-date checklist.
 4. **One effect** — a filter or delay via `juce::dsp`.
 5. **Piano roll** — a note data model plus a `Component` that draws/edits it (GUI-thread only, no audio yet).
 6. **Playback engine** — piano roll notes turned into sample-accurate scheduled MIDI events feeding the synth.

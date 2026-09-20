@@ -22,12 +22,22 @@ public:
         phaseIncrement = (juce::MathConstants<double>::twoPi * noteInHertz / sampleRate);
 
         currentPhase = 0.0;
+        currentLevel = 1.0;
+        releaseDecrement = 0.0;
+        isReleasing = false;
     }
 
     void stopNote (float velocity, bool allowTailOff) override
     {
-        juce::ignoreUnused (velocity, allowTailOff);
-        clearCurrentNote ();
+        if (!allowTailOff) {
+            clearCurrentNote ();
+            return;
+        }
+        isReleasing = true;
+        double releaseSamples = getSampleRate () * releaseInSeconds;
+        releaseDecrement = currentLevel / releaseSamples;
+
+        juce::ignoreUnused (velocity);
     }
 
     void pitchWheelMoved (int newPitchWheelValue) override
@@ -46,16 +56,25 @@ public:
             return;
         }
         for (int sampleIndex = startSample; sampleIndex < startSample + numSamples; sampleIndex++) {
-            float sample = sin (currentPhase) * amplitudeCoefficient;
+            double sample = sin (currentPhase) * amplitudeCoefficient * currentLevel;
 
             for (int channelIndex = 0; channelIndex < outputBuffer.getNumChannels (); channelIndex++) {
-                outputBuffer.addSample (channelIndex, sampleIndex, sample);
+                outputBuffer.addSample (channelIndex, sampleIndex, (float) sample);
             }
 
             currentPhase += phaseIncrement;
 
             if (currentPhase > juce::MathConstants<double>::twoPi) {
                 currentPhase -= juce::MathConstants<double>::twoPi;
+            }
+
+
+            if (isReleasing) {
+                currentLevel = std::max (currentLevel - releaseDecrement, 0.0);
+                if (currentLevel == 0) {
+                    clearCurrentNote();
+                    break;
+                }
             }
         }
     }
@@ -64,4 +83,8 @@ private:
     const double amplitudeCoefficient = 0.2;
     double phaseIncrement = 0.0;
     double currentPhase = 0.0;
+    double currentLevel = 0.0;
+    bool isReleasing = false;
+    double releaseDecrement = 0.0;
+    double releaseInSeconds = 0.05;
 };
